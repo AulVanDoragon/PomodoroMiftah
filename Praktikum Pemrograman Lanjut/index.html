@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Pomodoro - Fokus Belajar</title>
+    <style>
+        /* Reset CSS dasar */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace; /* Font bergaya coding/pixel */
+        }
+
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+            background-image: linear-gradient(to bottom right, #e0f7fa, #b2ebf2);
+        }
+
+        /* Container utama */
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #00796b;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        /* Input section */
+        .input-section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00796b;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #b2dfdb;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        /* Timer display - gaya pixel */
+        .timer-display {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 3rem;
+            color: #00796b;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #000;
+            border-radius: 10px;
+            letter-spacing: 5px;
+            text-shadow: 0 0 10px #4db6ac;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Pixel effect */
+        .timer-display::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(90deg, transparent 1px, rgba(0,0,0,0.1) 1px),
+                linear-gradient(transparent 1px, rgba(0,0,0,0.1) 1px);
+            background-size: 5px 5px;
+            opacity: 0.3;
+        }
+
+        /* Status text */
+        .status {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #00796b;
+            font-weight: bold;
+        }
+
+        /* Progress info */
+        .progress {
+            margin-bottom: 20px;
+            color: #00796b;
+        }
+
+        /* Tombol kontrol */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        #startBtn {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        #pauseBtn {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        #resetBtn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive design */
+        @media (max-width: 500px) {
+            .timer-display {
+                font-size: 2rem;
+            }
+            
+            .input-group {
+                min-width: 100%;
+            }
+        }
+    </style>
+    <!-- Font pixel style -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>POMODORO SIMPEL BUAT BANTU IKAK BELAJAR :V</h1>
+        
+        <!-- Input section untuk set waktu -->
+        <div class="input-section">
+            <div class="input-group">
+                <label for="focusTime">Fokus (menit)</label>
+                <input type="number" id="focusTime" min="1" value="25">
+            </div>
+            <div class="input-group">
+                <label for="breakTime">Istirahat (menit)</label>
+                <input type="number" id="breakTime" min="1" value="5">
+            </div>
+            <div class="input-group">
+                <label for="repetitions">Repetisi</label>
+                <input type="number" id="repetitions" min="1" value="4">
+            </div>
+        </div>
+        
+        <!-- Display timer dengan gaya pixel -->
+        <div class="timer-display" id="timer">25:00</div>
+        
+        <!-- Status (Fokus/Istirahat) -->
+        <div class="status" id="status">Siap memulai!</div>
+        
+        <!-- Progress info -->
+        <div class="progress" id="progress">Repetisi: 0/4</div>
+        
+        <!-- Tombol kontrol -->
+        <div class="controls">
+            <button id="startBtn">OMKE GAMS!</button>
+            <button id="pauseBtn" disabled>Jeda</button>
+            <button id="resetBtn" disabled>Reset</button>
+        </div>
+    </div>
+
+    <script>
+    let focusTime = 25;
+    let breakTime = 5;
+    let repetitions = 4;
+    let currentRep = 0;
+
+    let timer;
+    let isRunning = false;
+    let isFocusTime = true;
+    let remainingTime = 0;
+
+    const timerDisplay = document.getElementById('timer');
+    const statusDisplay = document.getElementById('status');
+    const progressDisplay = document.getElementById('progress');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const focusInput = document.getElementById('focusTime');
+    const breakInput = document.getElementById('breakTime');
+    const repsInput = document.getElementById('repetitions');
+    const alarmAudio = new Audio('alarm.mp3');
+
+
+    function updateTimerDisplay(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+        if (!isRunning) {
+            focusTime = parseInt(focusInput.value) || 25;
+            breakTime = parseInt(breakInput.value) || 5;
+            repetitions = parseInt(repsInput.value) || 4;
+
+            if (remainingTime <= 0) {
+                if (isFocusTime) {
+                    currentRep++;
+                    if (currentRep > repetitions) {
+                        timerComplete();
+                        return;
+                    }
+                    remainingTime = focusTime * 60;
+                    statusDisplay.textContent = 'Fokus!';
+                } else {
+                    remainingTime = breakTime * 60;
+                    statusDisplay.textContent = 'Istirahat!';
+                }
+
+                updateTimerDisplay(remainingTime);
+                progressDisplay.textContent = `Repetisi: ${currentRep}/${repetitions}`;
+                alarmAudio.play(); // Bunyi setiap kali ganti sesi
+            }
+
+            isRunning = true;
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            resetBtn.disabled = false;
+
+            timer = setInterval(() => {
+                remainingTime--;
+                updateTimerDisplay(remainingTime);
+
+                if (remainingTime <= 0) {
+                    clearInterval(timer);
+                    isRunning = false;
+                    isFocusTime = !isFocusTime;
+                    setTimeout(startTimer, 1000); // Lanjutkan otomatis
+                }
+            }, 1000);
+        }
+    }
+
+    function timerComplete() {
+        isRunning = false;
+        statusDisplay.textContent = 'Selesai! 🎉';
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        resetBtn.disabled = false;
+        alarmAudio.play(); // Alarm akhir
+    }
+
+    function pauseTimer() {
+        if (isRunning) {
+            clearInterval(timer);
+            isRunning = false;
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            statusDisplay.textContent = isFocusTime ? 'Fokus (Jeda)' : 'Istirahat (Jeda)';
+        }
+    }
+
+    function resetTimer() {
+        clearInterval(timer);
+        isRunning = false;
+        currentRep = 0;
+        isFocusTime = true;
+        remainingTime = 0;
+
+        focusTime = parseInt(focusInput.value) || 25;
+        updateTimerDisplay(focusTime * 60);
+        statusDisplay.textContent = 'Siap memulai!';
+        progressDisplay.textContent = `Repetisi: 0/${repetitions}`;
+
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        resetBtn.disabled = true;
+    }
+
+    startBtn.addEventListener('click', startTimer);
+    pauseBtn.addEventListener('click', pauseTimer);
+    resetBtn.addEventListener('click', resetTimer);
+
+    focusInput.addEventListener('change', () => {
+        if (!isRunning && remainingTime <= 0) {
+            focusTime = parseInt(focusInput.value) || 25;
+            updateTimerDisplay(focusTime * 60);
+        }
+    });
+
+    breakInput.addEventListener('change', () => {
+        breakTime = parseInt(breakInput.value) || 5;
+    });
+
+    repsInput.addEventListener('change', () => {
+        repetitions = parseInt(repsInput.value) || 4;
+        if (!isRunning && remainingTime <= 0) {
+            progressDisplay.textContent = `Repetisi: 0/${repetitions}`;
+        }
+    });
+</script>
+
+    </script>
+</body>
+</html>
